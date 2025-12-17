@@ -264,17 +264,24 @@ function setupNotificationButtonHandlers() {
     const testBtn = document.getElementById('testNotificationBtn');
     if (testBtn) {
         testBtn.addEventListener('click', () => {
+            console.log('Test notification button clicked');
+            console.log('Notification support:', notificationManager.checkNotificationSupport());
+            
             notificationManager.updatePermissionFromBrowser();
             
             if (notificationManager.isPermissionGranted()) {
+                console.log('Permission granted, showing test notification...');
                 const success = notificationManager.showTestNotification();
                 if (success) {
                     showNotification('Тестовое уведомление отправлено', 'success');
+                    console.log('Test notification success');
                 } else {
                     showNotification('Не удалось отправить уведомление', 'error');
+                    console.log('Test notification failed');
                 }
             } else {
-                showNotification('Уведомления запрещены', 'error');
+                console.log('Permission not granted:', notificationManager.permission);
+                showNotification('Уведомления запрещены. Разрешите в настройках браузера.', 'error');
             }
         });
     }
