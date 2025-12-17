@@ -15,7 +15,7 @@
                 <h1 class="app-page-title">Создание аккаунта</h1>
             </header>
 
-            <form class="app-login-form">
+            <form id="registerForm" class="app-login-form">
                 <div class="app-form-group">
                     <label for="register-name" class="app-form-label">Имя</label>
                     <input type="text" id="register-name" class="app-form-input" placeholder="Иван Иванов" required>
@@ -29,12 +29,15 @@
                 <div class="app-form-group">
                     <label for="register-password" class="app-form-label">Пароль</label>
                     <input type="password" id="register-password" class="app-form-input" placeholder="••••••••" required>
+                    <small style="color: var(--color-text-secondary); font-size: 0.85rem;">Минимум 6 символов</small>
                 </div>
 
                 <div class="app-form-group">
                     <label for="register-password-confirm" class="app-form-label">Подтверждение пароля</label>
                     <input type="password" id="register-password-confirm" class="app-form-input" placeholder="••••••••" required>
                 </div>
+
+                <div id="registerError" class="app-error-message" style="display: none; color: #ff6b6b; margin-bottom: var(--spacing-md);"></div>
 
                 <button type="submit" class="app-button app-button--accent">Зарегистрироваться</button>
             </form>
@@ -45,5 +48,10 @@
             </footer>
         </div>
     </main>
+
+    <script type="module">
+        import { initRegister } from './js/auth.js';
+        initRegister();
+    </script>
 </body>
 </html>

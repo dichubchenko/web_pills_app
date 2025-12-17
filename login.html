@@ -15,7 +15,7 @@
                 <h1 class="app-page-title">Вход в дневник</h1>
             </header>
 
-            <form class="app-login-form">
+            <form id="loginForm" class="app-login-form">
                 <div class="app-form-group">
                     <label for="login-email" class="app-form-label">Электронная почта</label>
                     <input type="email" id="login-email" class="app-form-input" placeholder="your.email@example.com" required>
@@ -26,6 +26,8 @@
                     <input type="password" id="login-password" class="app-form-input" placeholder="••••••••" required>
                 </div>
 
+                <div id="loginError" class="app-error-message" style="display: none; color: #ff6b6b; margin-bottom: var(--spacing-md);"></div>
+
                 <button type="submit" class="app-button app-button--accent">Войти</button>
             </form>
 
@@ -35,5 +37,10 @@
             </footer>
         </div>
     </main>
+
+    <script type="module">
+        import { initLogin } from './js/auth.js';
+        initLogin();
+    </script>
 </body>
 </html>

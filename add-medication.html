@@ -12,10 +12,10 @@
         <div class="app-glass-card">
             <header class="app-login-header">
                 <div class="app-logo">💊</div>
-                <h1 class="app-page-title">Добавить лекарство</h1>
+                <h1 class="app-page-title" id="pageTitle">Добавить лекарство</h1>
             </header>
 
-            <form class="app-login-form">
+            <form id="medicationForm" class="app-login-form">
                 <div class="app-form-group">
                     <label for="med-name" class="app-form-label">Название лекарства</label>
                     <input type="text" id="med-name" class="app-form-input" placeholder="Например: Аспирин" required>
@@ -45,7 +45,6 @@
                     </div>
                 </div>
 
-                <!-- Поля, которые появляются только для постоянного приёма -->
                 <div class="app-form-group" id="frequencyGroup" style="display: none;">
                     <label class="app-form-label">Повторять</label>
                     <div class="app-frequency-options">
@@ -69,12 +68,13 @@
                     <textarea id="med-notes" class="app-form-input" rows="3" placeholder="Например: после еды, запивать водой..."></textarea>
                 </div>
 
+                <div id="formError" class="app-error-message" style="display: none; color: #ff6b6b; margin-bottom: var(--spacing-md);"></div>
+
                 <div class="app-form-actions">
                     <a href="diary.html" class="app-button" style="background: transparent; border: 1px solid var(--color-border);">Отмена</a>
-                    <button type="submit" class="app-button app-button--accent">Добавить</button>
+                    <button type="submit" class="app-button app-button--accent" id="submitBtn">Добавить</button>
                 </div>
             </form>
-
 
             <footer class="app-login-footer">
                 <p><a href="diary.html">← Вернуться в дневник</a></p>
@@ -82,23 +82,9 @@
         </div>
     </main>
 
-    <script>
-        // Минимальный JS для показа/скрытия поля "Повторять"
-        const typeRadios = document.querySelectorAll('input[name="med-type"]');
-        const frequencyGroup = document.getElementById('frequencyGroup');
-
-        function toggleFrequencyGroup() {
-            const selectedType = document.querySelector('input[name="med-type"]:checked').value;
-            frequencyGroup.style.display = selectedType === 'regular' ? 'block' : 'none';
-        }
-
-        // Инициализация
-        toggleFrequencyGroup();
-
-        // Слушаем изменения в типе приёма
-        typeRadios.forEach(radio => {
-            radio.addEventListener('change', toggleFrequencyGroup);
-        });
+    <script type="module">
+        import { initAddMedication } from './js/medications.js';
+        initAddMedication();
     </script>
 </body>
 </html>
