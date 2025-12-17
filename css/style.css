@@ -635,3 +635,24 @@ a:focus {
     background: var(--color-border);
     margin: 0.5rem 0;
 }
+
+.app-calendar-btn {
+    background: none;
+    border: none;
+    color: #1a73e8;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.app-calendar-btn:hover {
+    background: rgba(26, 115, 232, 0.1);
+    transform: scale(1.1);
+}
+
+.app-calendar-btn:focus {
+    outline: 2px solid #1a73e8;
+    outline-offset: 2px;
+}
