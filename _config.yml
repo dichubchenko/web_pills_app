@@ -1,6 +1,0 @@
-title: Медицинский дневник
-description: Приложение для отслеживания приема лекарств
-theme: jekyll-theme-cayman
-plugins:
-  - jekyll-sitemap
-  - jekyll-seo-tag
