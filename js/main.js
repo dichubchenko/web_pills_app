@@ -1,5 +1,6 @@
 import { getCurrentUser } from './storage.js';
 import { createNotificationStyles } from './utils.js';
+import { notificationManager } from './notifications.js';
 
 export function initApp() {
     createNotificationStyles();
@@ -20,6 +21,12 @@ export function initApp() {
     }
     
     initCommonComponents();
+    
+    if (currentUser && notificationManager.canRequestPermission()) {
+        setTimeout(() => {
+            showNotificationPermissionRequest();
+        }, 2000);
+    }
 }
 
 function initCommonComponents() {
@@ -57,6 +64,35 @@ function initCommonComponents() {
         `;
         document.head.appendChild(style);
     }
+}
+
+async function showNotificationPermissionRequest() {
+    const { createModal } = await import('./ui.js');
+    
+    createModal({
+        title: 'Уведомления о приеме лекарств',
+        content: `
+            <div style="line-height: 1.6;">
+                <p>Хотите получать уведомления о времени приема лекарств?</p>
+                <p style="font-size: 0.9rem; color: var(--color-text-secondary);">
+                    Уведомления будут показываться даже когда браузер свернут.
+                </p>
+            </div>
+        `,
+        confirmText: 'Разрешить',
+        cancelText: 'Не сейчас',
+        onConfirm: async () => {
+            const permission = await notificationManager.requestPermission();
+            
+            if (permission === 'granted') {
+                const { showNotification } = await import('./utils.js');
+                showNotification('Уведомления разрешены! Вы будете получать напоминания о приеме лекарств.', 'success');
+            }
+        },
+        onCancel: () => {
+            notificationManager.savePermission('denied');
+        }
+    });
 }
 
 export function setLoading(element, isLoading) {

@@ -21,6 +21,7 @@ import {
     formatTime,
     parseTime
 } from './utils.js';
+import { notificationManager } from './notifications.js';
 
 let currentDate = new Date();
 let currentSelectedDate = new Date();
@@ -40,13 +41,14 @@ export function initDiary() {
     }
     
     initDateSlider();
-    initMedicationLists();
     initAddButton();
     initLogoutButton();
     initManageMedicationsButton();
+    initNotificationControls();
     
     updateDateDisplay();
     updateMedicationsForDate(currentSelectedDate);
+    scheduleTodayNotifications();
     
     document.addEventListener('click', async (e) => {
         if (e.target.classList.contains('app-delete-btn') && e.target.dataset.medicationId) {
@@ -66,6 +68,271 @@ export function initDiary() {
             }
         }
     });
+}
+
+function initNotificationControls() {
+    const notificationBtn = document.getElementById('notificationSettingsBtn');
+    if (!notificationBtn) return;
+    
+    notificationBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const addButton = document.getElementById('addButton');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+        if (addButton && dropdownMenu) {
+            addButton.setAttribute('aria-expanded', 'false');
+            dropdownMenu.classList.remove('app-dropdown-menu--visible');
+        }
+        
+        await showNotificationSettings();
+    });
+}
+
+async function showNotificationSettings() {
+    const content = `
+        <div style="line-height: 1.6;">
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="margin-top: 0; margin-bottom: 0.5rem; color: var(--color-accent);">Статус уведомлений</h4>
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <div style="width: 12px; height: 12px; border-radius: 50%; background: ${notificationManager.isPermissionGranted() ? '#34c7a6' : notificationManager.isPermissionDenied() ? '#ff6b6b' : '#ffd166'};"></div>
+                    <span>${getNotificationStatusText()}</span>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="margin-top: 0; margin-bottom: 0.5rem; color: var(--color-primary-light);">Запланированные уведомления</h4>
+                ${getScheduledNotificationsHTML()}
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                ${getNotificationButtonsHTML()}
+            </div>
+        </div>
+    `;
+    
+    try {
+        const { createModal } = await import('./ui.js');
+        createModal({
+            title: 'Настройки уведомлений',
+            content: content,
+            confirmText: 'Закрыть',
+            showCancel: false,
+            onConfirm: () => {}
+        });
+        
+        setupNotificationButtonHandlers();
+    } catch (error) {
+        console.error('Error showing notification settings:', error);
+    }
+}
+
+function getNotificationStatusText() {
+    if (!notificationManager.isSupported) {
+        return 'Уведомления не поддерживаются в вашем браузере';
+    }
+    
+    notificationManager.updatePermissionFromBrowser();
+    
+    if (notificationManager.isPermissionGranted()) {
+        return 'Уведомления разрешены ✅';
+    }
+    
+    if (notificationManager.isPermissionDenied()) {
+        return 'Уведомления запрещены ❌';
+    }
+    
+    return 'Разрешение не запрошено';
+}
+
+function getScheduledNotificationsHTML() {
+    const scheduled = notificationManager.getScheduledNotifications();
+    
+    if (scheduled.length === 0) {
+        return '<p style="color: var(--color-text-secondary); font-size: 0.9rem;">Нет запланированных уведомлений</p>';
+    }
+    
+    const now = new Date();
+    
+    return `
+        <div style="max-height: 200px; overflow-y: auto;">
+            ${scheduled.map(item => {
+                const timeDiff = item.scheduledTime - now;
+                const minutes = Math.floor(timeDiff / (1000 * 60));
+                const hours = Math.floor(minutes / 60);
+                
+                let timeText;
+                if (minutes < 0) {
+                    timeText = 'Прошло';
+                } else if (minutes < 60) {
+                    timeText = `через ${minutes} мин`;
+                } else {
+                    timeText = `через ${hours} ч ${minutes % 60} мин`;
+                }
+                
+                return `
+                    <div style="
+                        padding: 0.75rem;
+                        background: rgba(255, 255, 255, 0.05);
+                        border-radius: 8px;
+                        margin-bottom: 0.5rem;
+                        border-left: 3px solid var(--color-accent);
+                    ">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>${item.medication.name}</strong>
+                                <div style="font-size: 0.85rem; color: var(--color-text-secondary);">
+                                    ${item.medication.time} | ${timeText}
+                                </div>
+                            </div>
+                            <button class="app-button" style="padding: 0.25rem 0.5rem; font-size: 0.85rem;" data-cancel-notification="${item.id}">
+                                Отменить
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+}
+
+function getNotificationButtonsHTML() {
+    notificationManager.updatePermissionFromBrowser();
+    
+    if (!notificationManager.isSupported) {
+        return '<p style="color: var(--color-text-secondary); font-size: 0.9rem; text-align: center;">Уведомления не поддерживаются в вашем браузере</p>';
+    }
+    
+    let buttons = '';
+    
+    if (notificationManager.canRequestPermission()) {
+        buttons += `
+            <button class="app-button app-button--accent" id="enableNotificationsBtn">
+                Включить уведомления
+            </button>
+        `;
+    }
+    
+    if (notificationManager.isPermissionGranted()) {
+        buttons += `
+            <button class="app-button" id="testNotificationBtn">
+                Тестовое уведомление
+            </button>
+            <button class="app-button" id="scheduleAllNotificationsBtn">
+                Перепланировать все
+            </button>
+            <button class="app-button" id="refreshPermissionBtn">
+                Обновить статус
+            </button>
+            <button class="app-button" style="background: transparent; border: 1px solid #ff6b6b; color: #ff6b6b;" id="disableNotificationsBtn">
+                Отключить уведомления
+            </button>
+        `;
+    }
+    
+    if (notificationManager.isPermissionDenied()) {
+        buttons += `
+            <button class="app-button" id="refreshPermissionBtn">
+                Проверить разрешение
+            </button>
+            <p style="font-size: 0.9rem; color: var(--color-text-secondary); text-align: center; margin-top: 0.5rem;">
+                Чтобы включить уведомления, разрешите их в настройках браузера
+            </p>
+        `;
+    }
+    
+    return buttons;
+}
+
+function setupNotificationButtonHandlers() {
+    const enableBtn = document.getElementById('enableNotificationsBtn');
+    if (enableBtn) {
+        enableBtn.addEventListener('click', async () => {
+            const permission = await notificationManager.requestPermission();
+            
+            if (permission === 'granted') {
+                showNotification('Уведомления включены!', 'success');
+                scheduleTodayNotifications();
+                showNotificationSettings();
+            } else if (permission === 'denied') {
+                showNotification('Уведомления запрещены', 'error');
+                showNotificationSettings();
+            }
+        });
+    }
+    
+    const testBtn = document.getElementById('testNotificationBtn');
+    if (testBtn) {
+        testBtn.addEventListener('click', () => {
+            notificationManager.updatePermissionFromBrowser();
+            
+            if (notificationManager.isPermissionGranted()) {
+                const success = notificationManager.showTestNotification();
+                if (success) {
+                    showNotification('Тестовое уведомление отправлено', 'success');
+                } else {
+                    showNotification('Не удалось отправить уведомление', 'error');
+                }
+            } else {
+                showNotification('Уведомления запрещены', 'error');
+            }
+        });
+    }
+    
+    const scheduleBtn = document.getElementById('scheduleAllNotificationsBtn');
+    if (scheduleBtn) {
+        scheduleBtn.addEventListener('click', () => {
+            notificationManager.updatePermissionFromBrowser();
+            
+            if (notificationManager.isPermissionGranted()) {
+                scheduleTodayNotifications();
+                showNotification('Все уведомления перепланированы', 'success');
+                showNotificationSettings();
+            } else {
+                showNotification('Уведомления запрещены', 'error');
+            }
+        });
+    }
+    
+    const refreshBtn = document.getElementById('refreshPermissionBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+            notificationManager.updatePermissionFromBrowser();
+            showNotification('Статус уведомлений обновлен', 'info');
+            showNotificationSettings();
+        });
+    }
+    
+    const disableBtn = document.getElementById('disableNotificationsBtn');
+    if (disableBtn) {
+        disableBtn.addEventListener('click', () => {
+            notificationManager.cancelAllNotifications();
+            notificationManager.savePermission('denied');
+            showNotification('Уведомления отключены', 'info');
+            showNotificationSettings();
+        });
+    }
+    
+    document.querySelectorAll('[data-cancel-notification]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const notificationId = e.target.dataset.cancelNotification;
+            notificationManager.cancelNotification(notificationId);
+            showNotification('Уведомление отменено', 'info');
+            showNotificationSettings();
+        });
+    });
+}
+
+function scheduleTodayNotifications() {
+    if (!notificationManager.isPermissionGranted()) {
+        return;
+    }
+    
+    const medications = getMedicationsForDate(new Date());
+    const pendingMedications = medications.filter(med => !isMedicationTaken(med.id));
+    
+    notificationManager.cancelAllNotifications();
+    notificationManager.scheduleAllMedicationsForToday(pendingMedications);
 }
 
 function initDateSlider() {
@@ -148,9 +415,6 @@ function updateDateDisplay() {
     }
 }
 
-function initMedicationLists() {
-}
-
 function updateMedicationsForDate(date) {
     const medications = getMedicationsForDate(date);
     const pendingList = document.getElementById('pendingMedications');
@@ -203,6 +467,10 @@ function updateMedicationsForDate(date) {
             takenList.appendChild(createMedicationElement(med, date, true));
         });
     }
+    
+    if (isSameDay(date, new Date()) && notificationManager.isPermissionGranted()) {
+        scheduleTodayNotifications();
+    }
 }
 
 function createMedicationElement(medication, date, isTaken = false) {
@@ -233,6 +501,8 @@ function createMedicationElement(medication, date, isTaken = false) {
             </div>` : ''}
         </div>
         <div class="app-medication-actions">
+            ${notificationManager.isPermissionGranted() && !isTaken && isSameDay(date, new Date()) ? 
+                `<button class="app-notify-btn" title="Напомнить" data-medication-id="${medication.id}" style="background: none; border: none; color: var(--color-accent); cursor: pointer; font-size: 1.2rem; padding: 0.25rem; border-radius: 4px;">🔔</button>` : ''}
             <button class="app-delete-btn" title="Удалить лекарство" data-medication-id="${medication.id}">🗑️</button>
         </div>
     `;
@@ -244,6 +514,7 @@ function createMedicationElement(medication, date, isTaken = false) {
     
     label.addEventListener('click', async (e) => {
         if (e.target.closest('.app-delete-btn')) return;
+        if (e.target.closest('.app-notify-btn')) return;
         if (e.target === checkbox) return;
         
         const newTakenState = !isTaken;
@@ -254,9 +525,22 @@ function createMedicationElement(medication, date, isTaken = false) {
             if (newTakenState) {
                 await markMedicationAsTaken(medication.id, date);
                 showNotification(`Лекарство "${medication.name}" отмечено как принятое`, 'success');
+                
+                if (isSameDay(date, new Date())) {
+                    const scheduled = notificationManager.getScheduledNotifications();
+                    scheduled.forEach(item => {
+                        if (item.medication.id === medication.id) {
+                            notificationManager.cancelNotification(item.id);
+                        }
+                    });
+                }
             } else {
                 await markMedicationAsNotTaken(medication.id, date);
                 showNotification(`Лекарство "${medication.name}" отмечено как не принятое`, 'info');
+                
+                if (isSameDay(date, new Date()) && notificationManager.isPermissionGranted()) {
+                    notificationManager.scheduleMedicationNotification(medication);
+                }
             }
             
             updateMedicationsForDate(date);
@@ -275,6 +559,19 @@ function createMedicationElement(medication, date, isTaken = false) {
         
         await handleDeleteMedication(medication.id, medication.name);
     });
+    
+    const notifyBtn = label.querySelector('.app-notify-btn');
+    if (notifyBtn) {
+        notifyBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            
+            if (notificationManager.isPermissionGranted()) {
+                notificationManager.scheduleMedicationNotification(medication);
+                showNotification(`Напоминание для "${medication.name}" установлено`, 'success');
+            }
+        });
+    }
     
     label.addEventListener('contextmenu', (e) => {
         e.preventDefault();
@@ -309,6 +606,14 @@ async function handleDeleteMedication(medicationId, medicationName) {
         
         if (result.success) {
             showNotification(result.message, 'success');
+            
+            const scheduled = notificationManager.getScheduledNotifications();
+            scheduled.forEach(item => {
+                if (item.medication.id === medicationId) {
+                    notificationManager.cancelNotification(item.id);
+                }
+            });
+            
             updateMedicationsForDate(currentSelectedDate);
         } else {
             showNotification(result.message, 'error');
@@ -319,7 +624,7 @@ async function handleDeleteMedication(medicationId, medicationName) {
     }
 }
 
-function showContextMenu(event, medication) {
+async function showContextMenu(event, medication) {
     const existingMenu = document.querySelector('.app-context-menu');
     if (existingMenu) {
         existingMenu.remove();
@@ -340,7 +645,7 @@ function showContextMenu(event, medication) {
         overflow: hidden;
     `;
     
-    menu.innerHTML = `
+    let menuItems = `
         <div class="app-context-menu-item" data-action="delete" style="
             padding: 0.75rem 1rem;
             cursor: pointer;
@@ -353,6 +658,27 @@ function showContextMenu(event, medication) {
             <span>🗑️</span>
             <span>Удалить</span>
         </div>
+    `;
+    
+    if (notificationManager.isPermissionGranted() && isSameDay(currentSelectedDate, new Date())) {
+        menuItems += `
+            <div class="app-context-menu-item" data-action="notify" style="
+                padding: 0.75rem 1rem;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                color: var(--color-accent);
+                transition: background 0.2s ease;
+                border-top: 1px solid var(--color-border);
+            ">
+                <span>🔔</span>
+                <span>Установить напоминание</span>
+            </div>
+        `;
+    }
+    
+    menuItems += `
         <div class="app-context-menu-item" data-action="info" style="
             padding: 0.75rem 1rem;
             cursor: pointer;
@@ -366,6 +692,8 @@ function showContextMenu(event, medication) {
             <span>Информация</span>
         </div>
     `;
+    
+    menu.innerHTML = menuItems;
     
     document.body.appendChild(menu);
     
@@ -383,6 +711,12 @@ function showContextMenu(event, medication) {
         switch (action) {
             case 'delete':
                 await handleDeleteMedication(medication.id, medication.name);
+                break;
+            case 'notify':
+                if (notificationManager.isPermissionGranted()) {
+                    notificationManager.scheduleMedicationNotification(medication);
+                    showNotification(`Напоминание для "${medication.name}" установлено`, 'success');
+                }
                 break;
             case 'info':
                 showMedicationInfo(medication);
@@ -578,6 +912,10 @@ async function handleAddMedication(event) {
         if (result.success) {
             showNotification(`Лекарство "${name}" успешно добавлено`, 'success');
             
+            if (notificationManager.isPermissionGranted() && isSameDay(new Date(), new Date(result.medication.date || result.medication.createdAt))) {
+                notificationManager.scheduleMedicationNotification(result.medication);
+            }
+            
             setTimeout(() => {
                 window.location.href = 'diary.html';
             }, 1000);
@@ -698,57 +1036,4 @@ function createManageMedicationItem(medication) {
             </button>
         </div>
     `;
-}
-
-async function showMedicationStats() {
-    const currentUser = getCurrentUser();
-    if (!currentUser) return;
-    
-    const medications = getUserMedications(currentUser.id);
-    const history = getTakenHistory(currentUser.id);
-    
-    const regularCount = medications.filter(m => m.type === 'regular').length;
-    const singleCount = medications.filter(m => m.type === 'single').length;
-    
-    let totalTaken = 0;
-    Object.values(history).forEach(dateMeds => {
-        totalTaken += dateMeds.length;
-    });
-    
-    const content = `
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; text-align: center;">
-            <div style="background: rgba(52, 199, 166, 0.1); padding: 1rem; border-radius: 8px;">
-                <div style="font-size: 2rem; color: var(--color-accent);">${medications.length}</div>
-                <div style="font-size: 0.9rem; color: var(--color-text-secondary);">Всего лекарств</div>
-            </div>
-            <div style="background: rgba(26, 107, 138, 0.1); padding: 1rem; border-radius: 8px;">
-                <div style="font-size: 2rem; color: var(--color-primary-light);">${totalTaken}</div>
-                <div style="font-size: 0.9rem; color: var(--color-text-secondary);">Всего принято</div>
-            </div>
-            <div style="background: rgba(52, 199, 166, 0.1); padding: 1rem; border-radius: 8px;">
-                <div style="font-size: 2rem; color: var(--color-accent);">${regularCount}</div>
-                <div style="font-size: 0.9rem; color: var(--color-text-secondary);">Регулярных</div>
-            </div>
-            <div style="background: rgba(26, 107, 138, 0.1); padding: 1rem; border-radius: 8px;">
-                <div style="font-size: 2rem; color: var(--color-primary-light);">${singleCount}</div>
-                <div style="font-size: 0.9rem; color: var(--color-text-secondary);">Разовых</div>
-            </div>
-        </div>
-        <div style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--color-text-secondary); text-align: center;">
-            Статистика обновляется в реальном времени
-        </div>
-    `;
-    
-    try {
-        const { createModal } = await import('./ui.js');
-        createModal({
-            title: 'Статистика',
-            content: content,
-            confirmText: 'Закрыть',
-            showCancel: false,
-            onConfirm: () => {}
-        });
-    } catch (error) {
-        console.error('Error showing stats:', error);
-    }
 }

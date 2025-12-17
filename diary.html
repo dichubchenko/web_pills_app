@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Медицинский дневник | Мой день</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💊</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <style>
         .app-medication-badge {
             font-size: 0.7rem !important;
@@ -28,10 +28,9 @@
             opacity: 1;
         }
 
-        .app-delete-btn {
+        .app-delete-btn, .app-notify-btn {
             background: none;
             border: none;
-            color: #ff6b6b;
             cursor: pointer;
             font-size: 1.2rem;
             padding: 0.25rem;
@@ -39,13 +38,26 @@
             transition: all 0.2s ease;
         }
 
+        .app-delete-btn {
+            color: #ff6b6b;
+        }
+
         .app-delete-btn:hover {
             background: rgba(255, 107, 107, 0.1);
             transform: scale(1.1);
         }
 
-        .app-delete-btn:focus {
-            outline: 2px solid #ff6b6b;
+        .app-notify-btn {
+            color: var(--color-accent);
+        }
+
+        .app-notify-btn:hover {
+            background: rgba(52, 199, 166, 0.1);
+            transform: scale(1.1);
+        }
+
+        .app-delete-btn:focus, .app-notify-btn:focus {
+            outline: 2px solid currentColor;
             outline-offset: 2px;
         }
 
@@ -99,6 +111,11 @@
         .app-context-menu-item[data-action="info"] {
             border-top: 1px solid var(--color-border);
         }
+
+        .app-context-menu-item[data-action="notify"] {
+            color: var(--color-accent);
+            border-top: 1px solid var(--color-border);
+        }
     </style>
 </head>
 <body>
@@ -118,6 +135,7 @@
                 <button class="app-date-slider-btn" id="nextDateBtn" aria-label="Следующая дата">›</button>
             </div>
         </section>
+
         <section class="app-medication-section">
             <h2 class="app-section-title">К приёму (<span id="pendingCount">0</span>)</h2>
             <div class="app-medication-list" id="pendingMedications">
@@ -126,6 +144,7 @@
                 </div>
             </div>
         </section>
+
         <section class="app-medication-section">
             <h2 class="app-section-title">Принято (<span id="takenCount">0</span>)</h2>
             <div class="app-medication-list" id="takenMedications">
@@ -143,6 +162,7 @@
                 <a href="add-medication.html?type=single" class="app-dropdown-item">➕ Добавить разовый приём</a>
                 <a href="add-medication.html?type=regular" class="app-dropdown-item">📅 Добавить постоянное лекарство</a>
                 <a href="#" id="manageMedicationsBtn" class="app-dropdown-item">📋 Управление лекарствами</a>
+                <a href="#" id="notificationSettingsBtn" class="app-dropdown-item">🔔 Настройки уведомлений</a>
                 <div class="app-dropdown-divider" style="height: 1px; background: var(--color-border); margin: 0.5rem 0;"></div>
                 <a href="#" id="logoutBtn" class="app-dropdown-item">🚪 Выйти</a>
             </div>
