@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Медицинский дневник | Вход</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
-</head>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <body>
     <main class="app-container app-login-container">
         <div class="app-glass-card">
@@ -19,17 +17,17 @@
             <form id="loginForm" class="app-login-form">
                 <div class="app-form-group">
                     <label for="login-email" class="app-form-label">Электронная почта</label>
-                    <input type="email" id="login-email" class="app-form-input" placeholder="your.email@example.com">
+                    <input type="email" id="login-email" class="app-form-input" placeholder="your.email@example.com" required>
                 </div>
 
                 <div class="app-form-group">
                     <label for="login-password" class="app-form-label">Пароль</label>
-                    <input type="password" id="login-password" class="app-form-input" placeholder="••••••••">
+                    <input type="password" id="login-password" class="app-form-input" placeholder="••••••••" required>
                 </div>
 
                 <div id="loginError" class="app-error-message" style="display: none; color: #ff6b6b; margin-bottom: var(--spacing-md);"></div>
 
-                <button type="button" id="loginBtn" class="app-button app-button--accent">Войти</button>
+                <button type="submit" class="app-button app-button--accent">Войти</button>
             </form>
 
             <footer class="app-login-footer">
@@ -39,43 +37,18 @@
         </div>
     </main>
 
-    <script>
-        // Простая версия без модулей
-        document.getElementById('loginBtn').addEventListener('click', function() {
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            const errorElement = document.getElementById('loginError');
-            
-            if (!email || !password) {
-                errorElement.textContent = 'Пожалуйста, заполните все поля';
-                errorElement.style.display = 'block';
-                return;
-            }
-            
-            // Простая проверка email
-            if (!email.includes('@')) {
-                errorElement.textContent = 'Пожалуйста, введите корректный email';
-                errorElement.style.display = 'block';
-                return;
-            }
-            
-            // Имитация успешного входа
-            errorElement.style.display = 'none';
-            this.textContent = 'Вход...';
-            this.disabled = true;
-            
-            setTimeout(() => {
-                // Сохраняем фейкового пользователя
-                const user = {
-                    id: '1',
-                    name: email.split('@')[0],
-                    email: email
-                };
-                localStorage.setItem('currentUser', JSON.stringify(user));
-                
-                // Переходим в дневник
-                window.location.href = 'diary.html';
-            }, 1000);
+    <script type="module">
+        // Используем относительные пути для GitHub Pages
+        const basePath = window.location.hostname.includes('github.io') ? '/medication-diary' : '';
+        
+        import(basePath + '/js/medications.js').then(module => {
+            module.initDiary();
+        }).catch(error => {
+            console.error('Error loading module:', error);
+            // Fallback для локальной разработки
+            import('./js/medications.js').then(module => {
+                module.initDiary();
+            });
         });
     </script>
 </body>

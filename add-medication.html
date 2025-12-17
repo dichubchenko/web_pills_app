@@ -5,31 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Медицинский дневник | Добавить лекарство</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 </head>
 <body>
     <main class="app-container app-add-medication-container">
         <div class="app-glass-card">
             <header class="app-login-header">
                 <div class="app-logo">💊</div>
-                <h1 class="app-page-title">Добавить лекарство</h1>
+                <h1 class="app-page-title" id="pageTitle">Добавить лекарство</h1>
             </header>
 
             <form id="medicationForm" class="app-login-form">
                 <div class="app-form-group">
                     <label for="med-name" class="app-form-label">Название лекарства</label>
-                    <input type="text" id="med-name" class="app-form-input" placeholder="Например: Аспирин">
+                    <input type="text" id="med-name" class="app-form-input" placeholder="Например: Аспирин" required>
                 </div>
 
                 <div class="app-form-group">
                     <label for="med-dosage" class="app-form-label">Дозировка</label>
-                    <input type="text" id="med-dosage" class="app-form-input" placeholder="Например: 1 таблетка, 10мг">
+                    <input type="text" id="med-dosage" class="app-form-input" placeholder="Например: 1 таблетка, 10мг" required>
                 </div>
 
                 <div class="app-form-group">
                     <label for="med-time" class="app-form-label">Время приёма</label>
-                    <input type="time" id="med-time" class="app-form-input" value="12:00">
+                    <input type="time" id="med-time" class="app-form-input" required>
                 </div>
 
                 <div class="app-form-group">
@@ -72,8 +71,8 @@
                 <div id="formError" class="app-error-message" style="display: none; color: #ff6b6b; margin-bottom: var(--spacing-md);"></div>
 
                 <div class="app-form-actions">
-                    <a href="diary.html" class="app-button" style="background: transparent; border: 1px solid rgba(255, 255, 255, 0.1);">Отмена</a>
-                    <button type="button" id="submitBtn" class="app-button app-button--accent">Добавить</button>
+                    <a href="diary.html" class="app-button" style="background: transparent; border: 1px solid var(--color-border);">Отмена</a>
+                    <button type="submit" class="app-button app-button--accent" id="submitBtn">Добавить</button>
                 </div>
             </form>
 
@@ -83,52 +82,18 @@
         </div>
     </main>
 
-    <script>
-        // Простая версия добавления лекарства
-        console.log('Add medication page loaded - SIMPLE VERSION');
+    <script type="module">
+        // Используем относительные пути для GitHub Pages
+        const basePath = window.location.hostname.includes('github.io') ? '/medication-diary' : '';
         
-        // Проверяем авторизацию
-        const currentUser = localStorage.getItem('currentUser');
-        if (!currentUser) {
-            setTimeout(() => {
-                window.location.href = 'login.html';
-            }, 100);
-        }
-        
-        // Показ/скрытие частоты приема
-        document.querySelectorAll('input[name="med-type"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                const frequencyGroup = document.getElementById('frequencyGroup');
-                if (this.value === 'regular') {
-                    frequencyGroup.style.display = 'block';
-                } else {
-                    frequencyGroup.style.display = 'none';
-                }
+        import(basePath + '/js/medications.js').then(module => {
+            module.initDiary();
+        }).catch(error => {
+            console.error('Error loading module:', error);
+            // Fallback для локальной разработки
+            import('./js/medications.js').then(module => {
+                module.initDiary();
             });
-        });
-        
-        // Обработка отправки формы
-        document.getElementById('submitBtn').addEventListener('click', function() {
-            const name = document.getElementById('med-name').value;
-            const dosage = document.getElementById('med-dosage').value;
-            const time = document.getElementById('med-time').value;
-            const errorElement = document.getElementById('formError');
-            
-            if (!name || !dosage || !time) {
-                errorElement.textContent = 'Пожалуйста, заполните все обязательные поля';
-                errorElement.style.display = 'block';
-                return;
-            }
-            
-            // Имитация успешного добавления
-            errorElement.style.display = 'none';
-            this.textContent = 'Добавление...';
-            this.disabled = true;
-            
-            setTimeout(() => {
-                // Переходим обратно в дневник
-                window.location.href = 'diary.html';
-            }, 1000);
         });
     </script>
 </body>

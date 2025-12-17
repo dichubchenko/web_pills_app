@@ -20,9 +20,20 @@
         </div>
     </div>
     
-    <script>
-        // Отключаем любые редиректы - чисто статическая страница
-        console.log('Index page loaded - STATIC VERSION');
+    <script type="module">
+        // Автоматическое определение пути
+        const basePath = window.location.pathname.includes('/medication-diary/') ? '/medication-diary' : '';
+        
+        // Загружаем main.js с правильным путем
+        import(`${basePath ? basePath + '/' : ''}js/main.js`).then(module => {
+            module.initApp();
+        }).catch(error => {
+            console.error('Error loading main.js:', error);
+            // Fallback для локальной разработки
+            import('./js/main.js').then(module => {
+                module.initApp();
+            });
+        });
     </script>
 </body>
 </html>
