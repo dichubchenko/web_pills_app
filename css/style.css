@@ -531,3 +531,107 @@ a:focus {
 .app-context-menu-item[data-action="info"] {
     border-top: 1px solid var(--color-border);
 }
+
+.app-notify-btn {
+    background: none;
+    border: none;
+    color: var(--color-accent);
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.app-notify-btn:hover {
+    background: rgba(52, 199, 166, 0.1);
+    transform: scale(1.1);
+}
+
+.app-notify-btn:focus {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+.app-notify-btn {
+    background: none;
+    border: none;
+    color: var(--color-accent);
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.app-notify-btn:hover {
+    background: rgba(52, 199, 166, 0.1);
+    transform: scale(1.1);
+}
+
+.app-notify-btn:focus {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+/* Стили для выпадающего меню кнопки + */
+.app-add-button-container {
+    position: fixed;
+    bottom: var(--spacing-lg);
+    right: var(--spacing-lg);
+    z-index: 100;
+}
+
+.app-add-button {
+    background: var(--color-accent);
+    color: var(--color-secondary);
+    box-shadow: var(--shadow-strong);
+}
+
+.app-add-button:hover,
+.app-add-button:focus {
+    background: #4cd4b2;
+    transform: scale(1.1);
+}
+
+.app-dropdown-menu {
+    position: absolute;
+    bottom: 70px;
+    right: 0;
+    background: var(--color-surface);
+    backdrop-filter: var(--glass-blur);
+    border: var(--glass-border);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-strong);
+    min-width: 200px;
+    padding: var(--spacing-sm) 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+}
+
+.app-dropdown-menu--visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.app-dropdown-item {
+    display: block;
+    padding: var(--spacing-sm) var(--spacing-md);
+    color: var(--color-text);
+    transition: background 0.2s ease;
+}
+
+.app-dropdown-item:hover,
+.app-dropdown-item:focus {
+    background: var(--color-surface-hover);
+    color: var(--color-accent);
+}
+
+.app-dropdown-divider {
+    height: 1px;
+    background: var(--color-border);
+    margin: 0.5rem 0;
+}

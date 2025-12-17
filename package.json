@@ -5,9 +5,12 @@
   "main": "index.html",
   "scripts": {
     "start": "npx serve .",
-    "dev": "npx live-server --port=8080"
+    "dev": "npx live-server --port=8080",
+    "hard-reset": "npm cache clean --force && rm -rf node_modules package-lock.json && npm install",
+    "hard-dev": "npm run hard-reset && npm run dev"
   },
   "keywords": ["medication", "diary", "health", "tracker"],
   "author": "",
   "license": "MIT"
 }
+
