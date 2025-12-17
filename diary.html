@@ -6,51 +6,135 @@
     <title>Медицинский дневник | Мой день</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💊</text></svg>">
+    <style>
+        .app-medication-badge {
+            font-size: 0.7rem !important;
+            background: rgba(52, 199, 166, 0.2) !important;
+            color: var(--color-accent) !important;
+            padding: 2px 6px !important;
+            border-radius: 10px !important;
+            margin-left: 0.5rem !important;
+            display: inline-block !important;
+        }
+
+        .app-medication-actions {
+            display: flex;
+            gap: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .app-medication-item:hover .app-medication-actions {
+            opacity: 1;
+        }
+
+        .app-delete-btn {
+            background: none;
+            border: none;
+            color: #ff6b6b;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0.25rem;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .app-delete-btn:hover {
+            background: rgba(255, 107, 107, 0.1);
+            transform: scale(1.1);
+        }
+
+        .app-delete-btn:focus {
+            outline: 2px solid #ff6b6b;
+            outline-offset: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .app-medication-actions {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .app-context-menu {
+            position: fixed;
+            background: var(--color-surface);
+            backdrop-filter: var(--glass-blur);
+            border: var(--glass-border);
+            border-radius: var(--border-radius-small);
+            box-shadow: var(--shadow-strong);
+            min-width: 180px;
+            z-index: 1000;
+            animation: fadeIn 0.2s ease;
+            overflow: hidden;
+        }
+
+        .app-context-menu-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.2s ease;
+        }
+
+        .app-context-menu-item:hover {
+            background: var(--color-surface-hover);
+        }
+
+        .app-context-menu-item[data-action="delete"] {
+            color: #ff6b6b;
+        }
+
+        .app-context-menu-item[data-action="info"] {
+            border-top: 1px solid var(--color-border);
+        }
+    </style>
 </head>
 <body>
     <main class="app-container">
-        <!-- Шапка с датой -->
         <header class="app-diary-header">
             <h1 class="app-page-title">Мой дневник</h1>
             <div class="app-date-current" id="currentDate">Загрузка...</div>
         </header>
 
-        <!-- Слайдер с датами -->
         <section class="app-date-slider-container app-glass-card">
             <div class="app-date-slider">
                 <button class="app-date-slider-btn" id="prevDateBtn" aria-label="Предыдущая дата">‹</button>
 
                 <div class="app-date-list" id="dateList">
-                    <!-- Даты будут сгенерированы динамически -->
                 </div>
 
                 <button class="app-date-slider-btn" id="nextDateBtn" aria-label="Следующая дата">›</button>
             </div>
         </section>
-
-        <!-- Секция "К приёму" -->
         <section class="app-medication-section">
             <h2 class="app-section-title">К приёму (<span id="pendingCount">0</span>)</h2>
             <div class="app-medication-list" id="pendingMedications">
-                <!-- Лекарства будут сгенерированы динамически -->
                 <div class="app-empty-state" style="text-align: center; padding: var(--spacing-lg); color: var(--color-text-secondary);">
                     На сегодня приёма лекарств нет
                 </div>
             </div>
         </section>
-
-        <!-- Секция "Принято" -->
         <section class="app-medication-section">
             <h2 class="app-section-title">Принято (<span id="takenCount">0</span>)</h2>
             <div class="app-medication-list" id="takenMedications">
-                <!-- Лекарства будут сгенерированы динамически -->
                 <div class="app-empty-state" style="text-align: center; padding: var(--spacing-lg); color: var(--color-text-secondary);">
                     Вы ещё не приняли ни одного лекарства сегодня
                 </div>
             </div>
         </section>
 
-        <!-- Кнопка добавления и выпадающее меню -->
         <div class="app-add-button-container">
             <button class="app-button app-button--circle app-add-button" id="addButton" aria-label="Добавить лекарство" aria-expanded="false">
                 +
@@ -58,6 +142,8 @@
             <div class="app-dropdown-menu" id="dropdownMenu">
                 <a href="add-medication.html?type=single" class="app-dropdown-item">➕ Добавить разовый приём</a>
                 <a href="add-medication.html?type=regular" class="app-dropdown-item">📅 Добавить постоянное лекарство</a>
+                <a href="#" id="manageMedicationsBtn" class="app-dropdown-item">📋 Управление лекарствами</a>
+                <div class="app-dropdown-divider" style="height: 1px; background: var(--color-border); margin: 0.5rem 0;"></div>
                 <a href="#" id="logoutBtn" class="app-dropdown-item">🚪 Выйти</a>
             </div>
         </div>

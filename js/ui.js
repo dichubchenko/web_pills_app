@@ -1,14 +1,5 @@
-/**
- * Модуль UI компонентов
- */
-
 import { showNotification } from './utils.js';
 
-/**
- * Создает модальное окно
- * @param {Object} options - Опции модального окна
- * @returns {Object} Объект с методами управления модальным окном
- */
 export function createModal(options = {}) {
     const {
         title = 'Модальное окно',
@@ -20,7 +11,6 @@ export function createModal(options = {}) {
         showCancel = true
     } = options;
     
-    // Создаем элементы модального окна
     const overlay = document.createElement('div');
     overlay.className = 'app-modal-overlay';
     overlay.style.cssText = `
@@ -69,7 +59,6 @@ export function createModal(options = {}) {
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
     
-    // Добавляем стили для анимаций
     if (!document.getElementById('modal-styles')) {
         const style = document.createElement('style');
         style.id = 'modal-styles';
@@ -89,11 +78,26 @@ export function createModal(options = {}) {
                     opacity: 1;
                 }
             }
+            
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+            
+            @keyframes slideDown {
+                from {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateY(20px);
+                    opacity: 0;
+                }
+            }
         `;
         document.head.appendChild(style);
     }
     
-    // Обработчики событий
     const confirmBtn = modal.querySelector('#modalConfirm');
     const cancelBtn = modal.querySelector('#modalCancel');
     
@@ -125,30 +129,6 @@ export function createModal(options = {}) {
         }
     });
     
-    // Добавляем стили для выхода
-    if (!document.getElementById('modal-exit-styles')) {
-        const exitStyle = document.createElement('style');
-        exitStyle.id = 'modal-exit-styles';
-        exitStyle.textContent = `
-            @keyframes fadeOut {
-                from { opacity: 1; }
-                to { opacity: 0; }
-            }
-            
-            @keyframes slideDown {
-                from {
-                    transform: translateY(0);
-                    opacity: 1;
-                }
-                to {
-                    transform: translateY(20px);
-                    opacity: 0;
-                }
-            }
-        `;
-        document.head.appendChild(exitStyle);
-    }
-    
     return {
         close: closeModal,
         updateContent: (newContent) => {
@@ -160,11 +140,6 @@ export function createModal(options = {}) {
     };
 }
 
-/**
- * Создает подтверждающее модальное окно
- * @param {Object} options - Опции подтверждения
- * @returns {Promise} Promise, который резолвится при подтверждении
- */
 export function confirmDialog(options = {}) {
     return new Promise((resolve) => {
         createModal({
@@ -178,11 +153,6 @@ export function confirmDialog(options = {}) {
     });
 }
 
-/**
- * Создает индикатор загрузки
- * @param {string} text - Текст загрузки
- * @returns {Object} Объект с методами управления индикатором
- */
 export function createLoader(text = 'Загрузка...') {
     const loader = document.createElement('div');
     loader.className = 'app-loader';
@@ -215,7 +185,6 @@ export function createLoader(text = 'Загрузка...') {
         <div class="app-loader-text">${text}</div>
     `;
     
-    // Добавляем стили для анимации
     if (!document.getElementById('loader-styles')) {
         const style = document.createElement('style');
         style.id = 'loader-styles';
@@ -244,12 +213,6 @@ export function createLoader(text = 'Загрузка...') {
     };
 }
 
-/**
- * Создает всплывающую подсказку
- * @param {HTMLElement} element - Элемент, к которому привязана подсказка
- * @param {string} text - Текст подсказки
- * @param {Object} options - Опции подсказки
- */
 export function createTooltip(element, text, options = {}) {
     const tooltip = document.createElement('div');
     tooltip.className = 'app-tooltip';

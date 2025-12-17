@@ -1,7 +1,3 @@
-/**
- * Модуль для работы с localStorage
- */
-
 const STORAGE_KEYS = {
     USERS: 'med_diary_users',
     CURRENT_USER: 'med_diary_current_user',
@@ -9,11 +5,6 @@ const STORAGE_KEYS = {
     TAKEN_HISTORY: 'med_diary_taken_history'
 };
 
-/**
- * Сохраняет данные в localStorage
- * @param {string} key - Ключ
- * @param {any} data - Данные для сохранения
- */
 export function saveToStorage(key, data) {
     try {
         localStorage.setItem(key, JSON.stringify(data));
@@ -22,12 +13,6 @@ export function saveToStorage(key, data) {
     }
 }
 
-/**
- * Загружает данные из localStorage
- * @param {string} key - Ключ
- * @param {any} defaultValue - Значение по умолчанию
- * @returns {any} Данные из localStorage
- */
 export function loadFromStorage(key, defaultValue = null) {
     try {
         const data = localStorage.getItem(key);
@@ -38,54 +23,29 @@ export function loadFromStorage(key, defaultValue = null) {
     }
 }
 
-/**
- * Получает текущего пользователя
- * @returns {Object|null} Текущий пользователь или null
- */
 export function getCurrentUser() {
     return loadFromStorage(STORAGE_KEYS.CURRENT_USER);
 }
 
-/**
- * Устанавливает текущего пользователя
- * @param {Object} user - Объект пользователя
- */
 export function setCurrentUser(user) {
     saveToStorage(STORAGE_KEYS.CURRENT_USER, user);
 }
 
-/**
- * Выход из системы (удаление текущего пользователя)
- */
 export function logout() {
     localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
 }
 
-/**
- * Получает список пользователей
- * @returns {Array} Массив пользователей
- */
 export function getUsers() {
     return loadFromStorage(STORAGE_KEYS.USERS, []);
 }
 
-/**
- * Сохраняет список пользователей
- * @param {Array} users - Массив пользователей
- */
 export function saveUsers(users) {
     saveToStorage(STORAGE_KEYS.USERS, users);
 }
 
-/**
- * Регистрирует нового пользователя
- * @param {Object} userData - Данные пользователя
- * @returns {Object} Результат регистрации
- */
 export function registerUser(userData) {
     const users = getUsers();
     
-    // Проверяем, существует ли пользователь с таким email
     const existingUser = users.find(user => user.email === userData.email);
     if (existingUser) {
         return {
@@ -94,12 +54,11 @@ export function registerUser(userData) {
         };
     }
     
-    // Создаем нового пользователя
     const newUser = {
         id: Date.now().toString(),
         name: userData.name,
         email: userData.email,
-        password: userData.password, // В реальном приложении нужно хешировать!
+        password: userData.password,
         createdAt: new Date().toISOString()
     };
     
@@ -112,12 +71,6 @@ export function registerUser(userData) {
     };
 }
 
-/**
- * Авторизация пользователя
- * @param {string} email - Email
- * @param {string} password - Пароль
- * @returns {Object} Результат авторизации
- */
 export function loginUser(email, password) {
     const users = getUsers();
     const user = users.find(u => u.email === email && u.password === password);
@@ -129,7 +82,6 @@ export function loginUser(email, password) {
         };
     }
     
-    // Удаляем пароль из объекта пользователя перед сохранением
     const { password: _, ...userWithoutPassword } = user;
     setCurrentUser(userWithoutPassword);
     
@@ -139,32 +91,17 @@ export function loginUser(email, password) {
     };
 }
 
-/**
- * Получает лекарства пользователя
- * @param {string} userId - ID пользователя
- * @returns {Array} Массив лекарств
- */
 export function getUserMedications(userId) {
     const allMedications = loadFromStorage(STORAGE_KEYS.MEDICATIONS, {});
     return allMedications[userId] || [];
 }
 
-/**
- * Сохраняет лекарства пользователя
- * @param {string} userId - ID пользователя
- * @param {Array} medications - Массив лекарств
- */
 export function saveUserMedications(userId, medications) {
     const allMedications = loadFromStorage(STORAGE_KEYS.MEDICATIONS, {});
     allMedications[userId] = medications;
     saveToStorage(STORAGE_KEYS.MEDICATIONS, allMedications);
 }
 
-/**
- * Добавляет новое лекарство
- * @param {Object} medication - Данные лекарства
- * @returns {Object} Результат операции
- */
 export function addMedication(medication) {
     const currentUser = getCurrentUser();
     if (!currentUser) {
@@ -191,40 +128,24 @@ export function addMedication(medication) {
     };
 }
 
-/**
- * Получает историю приема лекарств
- * @param {string} userId - ID пользователя
- * @returns {Object} История приема по датам
- */
 export function getTakenHistory(userId) {
     const allHistory = loadFromStorage(STORAGE_KEYS.TAKEN_HISTORY, {});
     return allHistory[userId] || {};
 }
 
-/**
- * Сохраняет историю приема лекарств
- * @param {string} userId - ID пользователя
- * @param {Object} history - История приема
- */
 export function saveTakenHistory(userId, history) {
     const allHistory = loadFromStorage(STORAGE_KEYS.TAKEN_HISTORY, {});
     allHistory[userId] = history;
     saveToStorage(STORAGE_KEYS.TAKEN_HISTORY, allHistory);
 }
 
-/**
- * Отмечает лекарство как принятое
- * @param {string} medicationId - ID лекарства
- * @param {Date} date - Дата приема
- * @returns {Object} Результат операции
- */
 export function markMedicationAsTaken(medicationId, date = new Date()) {
     const currentUser = getCurrentUser();
     if (!currentUser) {
         return { success: false, message: 'Пользователь не авторизован' };
     }
     
-    const dateKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
+    const dateKey = date.toISOString().split('T')[0];
     const history = getTakenHistory(currentUser.id);
     
     if (!history[dateKey]) {
@@ -239,12 +160,6 @@ export function markMedicationAsTaken(medicationId, date = new Date()) {
     return { success: true };
 }
 
-/**
- * Отмечает лекарство как не принятое
- * @param {string} medicationId - ID лекарства
- * @param {Date} date - Дата приема
- * @returns {Object} Результат операции
- */
 export function markMedicationAsNotTaken(medicationId, date = new Date()) {
     const currentUser = getCurrentUser();
     if (!currentUser) {
@@ -262,12 +177,6 @@ export function markMedicationAsNotTaken(medicationId, date = new Date()) {
     return { success: true };
 }
 
-/**
- * Проверяет, принято ли лекарство в указанную дату
- * @param {string} medicationId - ID лекарства
- * @param {Date} date - Дата
- * @returns {boolean} true, если принято
- */
 export function isMedicationTaken(medicationId, date = new Date()) {
     const currentUser = getCurrentUser();
     if (!currentUser) return false;
@@ -278,11 +187,6 @@ export function isMedicationTaken(medicationId, date = new Date()) {
     return history[dateKey] && history[dateKey].includes(medicationId);
 }
 
-/**
- * Получает лекарства для указанной даты
- * @param {Date} date - Дата
- * @returns {Array} Массив лекарств для даты
- */
 export function getMedicationsForDate(date) {
     const currentUser = getCurrentUser();
     if (!currentUser) return [];
@@ -292,13 +196,11 @@ export function getMedicationsForDate(date) {
     const today = new Date();
     
     return allMedications.filter(med => {
-        // Для разовых лекарств проверяем дату
         if (med.type === 'single') {
             const medDate = new Date(med.date);
             return medDate.toISOString().split('T')[0] === dateKey;
         }
         
-        // Для постоянных лекарств проверяем расписание
         if (med.type === 'regular') {
             const startDate = new Date(med.startDate || med.createdAt);
             if (date < startDate) return false;
@@ -320,11 +222,6 @@ export function getMedicationsForDate(date) {
     });
 }
 
-/**
- * Удаляет лекарство
- * @param {string} medicationId - ID лекарства
- * @returns {Object} Результат операции
- */
 export function deleteMedication(medicationId) {
     const currentUser = getCurrentUser();
     if (!currentUser) {
@@ -332,8 +229,35 @@ export function deleteMedication(medicationId) {
     }
     
     const medications = getUserMedications(currentUser.id);
+    const medicationToDelete = medications.find(m => m.id === medicationId);
+    
+    if (!medicationToDelete) {
+        return { success: false, message: 'Лекарство не найдено' };
+    }
+    
     const updatedMedications = medications.filter(m => m.id !== medicationId);
     saveUserMedications(currentUser.id, updatedMedications);
     
-    return { success: true };
+    const history = getTakenHistory(currentUser.id);
+    const updatedHistory = {};
+    
+    Object.keys(history).forEach(dateKey => {
+        updatedHistory[dateKey] = history[dateKey].filter(id => id !== medicationId);
+    });
+    
+    saveTakenHistory(currentUser.id, updatedHistory);
+    
+    return { 
+        success: true, 
+        medication: medicationToDelete,
+        message: 'Лекарство успешно удалено'
+    };
+}
+
+export function getMedicationById(medicationId) {
+    const currentUser = getCurrentUser();
+    if (!currentUser) return null;
+    
+    const medications = getUserMedications(currentUser.id);
+    return medications.find(m => m.id === medicationId) || null;
 }

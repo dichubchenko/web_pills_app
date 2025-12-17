@@ -1,0 +1,13 @@
+{
+  "name": "medication-diary",
+  "version": "1.0.0",
+  "description": "Приложение для ведения дневника приема лекарств",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "dev": "npx live-server --port=8080"
+  },
+  "keywords": ["medication", "diary", "health", "tracker"],
+  "author": "",
+  "license": "MIT"
+}

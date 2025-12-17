@@ -1,21 +1,12 @@
-/**
- * Основной модуль приложения
- */
-
 import { getCurrentUser } from './storage.js';
 import { createNotificationStyles } from './utils.js';
 
-/**
- * Инициализирует приложение
- */
 export function initApp() {
     createNotificationStyles();
     
-    // Проверяем авторизацию при загрузке любой страницы
     const currentUser = getCurrentUser();
     const currentPage = window.location.pathname;
     
-    // Список страниц, доступных без авторизации
     const publicPages = ['/login.html', '/register.html', '/index.html', '/'];
     
     if (!currentUser && !publicPages.some(page => currentPage.endsWith(page))) {
@@ -28,15 +19,10 @@ export function initApp() {
         return;
     }
     
-    // Инициализируем общие компоненты
     initCommonComponents();
 }
 
-/**
- * Инициализирует общие компоненты на всех страницах
- */
 function initCommonComponents() {
-    // Добавляем слушатель для всех форм, чтобы предотвратить отправку по Enter
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
             const form = e.target.closest('form');
@@ -46,7 +32,6 @@ function initCommonComponents() {
         }
     });
     
-    // Добавляем стили для состояний загрузки
     if (!document.getElementById('loading-styles')) {
         const style = document.createElement('style');
         style.id = 'loading-styles';
@@ -74,11 +59,6 @@ function initCommonComponents() {
     }
 }
 
-/**
- * Показывает состояние загрузки для элемента
- * @param {HTMLElement} element - Элемент
- * @param {boolean} isLoading - Показать или скрыть загрузку
- */
 export function setLoading(element, isLoading) {
     if (isLoading) {
         element.classList.add('app-loading');
@@ -89,11 +69,6 @@ export function setLoading(element, isLoading) {
     }
 }
 
-/**
- * Перенаправляет на указанную страницу
- * @param {string} page - Страница для перенаправления
- * @param {Object} params - Параметры URL
- */
 export function redirectTo(page, params = {}) {
     const url = new URL(page, window.location.origin);
     
@@ -104,5 +79,4 @@ export function redirectTo(page, params = {}) {
     window.location.href = url.toString();
 }
 
-// Экспортируем initApp по умолчанию для удобства
 export default { initApp };

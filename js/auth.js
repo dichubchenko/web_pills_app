@@ -1,17 +1,9 @@
-/**
- * Модуль для работы с авторизацией и регистрацией
- */
-
 import { loginUser, registerUser, getCurrentUser } from './storage.js';
 import { showNotification, createNotificationStyles, validateEmail } from './utils.js';
 
-/**
- * Инициализирует экран логина
- */
 export function initLogin() {
     createNotificationStyles();
     
-    // Проверяем, если пользователь уже авторизован
     if (getCurrentUser()) {
         window.location.href = 'diary.html';
         return;
@@ -24,17 +16,12 @@ export function initLogin() {
     
     loginForm.addEventListener('submit', handleLogin);
     
-    // Фокус на поле email при загрузке
     const emailInput = document.getElementById('login-email');
     if (emailInput) {
         emailInput.focus();
     }
 }
 
-/**
- * Обработчик отправки формы логина
- * @param {Event} event - Событие отправки формы
- */
 async function handleLogin(event) {
     event.preventDefault();
     
@@ -42,7 +29,6 @@ async function handleLogin(event) {
     const password = document.getElementById('login-password').value.trim();
     const errorElement = document.getElementById('loginError');
     
-    // Валидация
     if (!email || !password) {
         showError(errorElement, 'Пожалуйста, заполните все поля');
         return;
@@ -53,14 +39,12 @@ async function handleLogin(event) {
         return;
     }
     
-    // Имитация загрузки
     const submitBtn = event.target.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
     submitBtn.textContent = 'Вход...';
     submitBtn.disabled = true;
     
     try {
-        // Имитация сетевой задержки
         await new Promise(resolve => setTimeout(resolve, 500));
         
         const result = loginUser(email, password);
@@ -68,7 +52,6 @@ async function handleLogin(event) {
         if (result.success) {
             showNotification('Вход выполнен успешно!', 'success');
             
-            // Перенаправляем на главную страницу дневника
             setTimeout(() => {
                 window.location.href = 'diary.html';
             }, 1000);
@@ -85,13 +68,9 @@ async function handleLogin(event) {
     }
 }
 
-/**
- * Инициализирует экран регистрации
- */
 export function initRegister() {
     createNotificationStyles();
     
-    // Проверяем, если пользователь уже авторизован
     if (getCurrentUser()) {
         window.location.href = 'diary.html';
         return;
@@ -104,7 +83,6 @@ export function initRegister() {
     
     registerForm.addEventListener('submit', handleRegister);
     
-    // Валидация пароля в реальном времени
     const passwordInput = document.getElementById('register-password');
     const confirmInput = document.getElementById('register-password-confirm');
     
@@ -114,17 +92,12 @@ export function initRegister() {
         });
     }
     
-    // Фокус на поле имени при загрузке
     const nameInput = document.getElementById('register-name');
     if (nameInput) {
         nameInput.focus();
     }
 }
 
-/**
- * Обработчик отправки формы регистрации
- * @param {Event} event - Событие отправки формы
- */
 async function handleRegister(event) {
     event.preventDefault();
     
@@ -134,7 +107,6 @@ async function handleRegister(event) {
     const confirmPassword = document.getElementById('register-password-confirm').value.trim();
     const errorElement = document.getElementById('registerError');
     
-    // Валидация
     if (!name || !email || !password || !confirmPassword) {
         showError(errorElement, 'Пожалуйста, заполните все поля');
         return;
@@ -155,14 +127,12 @@ async function handleRegister(event) {
         return;
     }
     
-    // Имитация загрузки
     const submitBtn = event.target.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
     submitBtn.textContent = 'Регистрация...';
     submitBtn.disabled = true;
     
     try {
-        // Имитация сетевой задержки
         await new Promise(resolve => setTimeout(resolve, 500));
         
         const result = registerUser({
@@ -174,7 +144,6 @@ async function handleRegister(event) {
         if (result.success) {
             showNotification('Регистрация прошла успешно!', 'success');
             
-            // Автоматически входим после регистрации
             const loginResult = loginUser(email, password);
             
             if (loginResult.success) {
@@ -195,9 +164,6 @@ async function handleRegister(event) {
     }
 }
 
-/**
- * Проверяет совпадение паролей
- */
 function validatePasswordMatch(passwordInput, confirmInput, errorElement) {
     if (passwordInput.value && confirmInput.value && passwordInput.value !== confirmInput.value) {
         showError(errorElement, 'Пароли не совпадают');
@@ -206,9 +172,6 @@ function validatePasswordMatch(passwordInput, confirmInput, errorElement) {
     }
 }
 
-/**
- * Показывает сообщение об ошибке
- */
 function showError(element, message) {
     if (element) {
         element.textContent = message;
@@ -216,9 +179,6 @@ function showError(element, message) {
     }
 }
 
-/**
- * Скрывает сообщение об ошибке
- */
 function hideError(element) {
     if (element) {
         element.textContent = '';
@@ -226,9 +186,6 @@ function hideError(element) {
     }
 }
 
-/**
- * Выход из системы
- */
 export function logout() {
     import('./storage.js').then(({ logout: storageLogout }) => {
         storageLogout();
