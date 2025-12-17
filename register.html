@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Медицинский дневник | Регистрация</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
 </head>
 <body>
     <main class="app-container app-register-container">
@@ -18,28 +19,27 @@
             <form id="registerForm" class="app-login-form">
                 <div class="app-form-group">
                     <label for="register-name" class="app-form-label">Имя</label>
-                    <input type="text" id="register-name" class="app-form-input" placeholder="Иван Иванов" required>
+                    <input type="text" id="register-name" class="app-form-input" placeholder="Иван Иванов">
                 </div>
 
                 <div class="app-form-group">
                     <label for="register-email" class="app-form-label">Электронная почта</label>
-                    <input type="email" id="register-email" class="app-form-input" placeholder="your.email@example.com" required>
+                    <input type="email" id="register-email" class="app-form-input" placeholder="your.email@example.com">
                 </div>
 
                 <div class="app-form-group">
                     <label for="register-password" class="app-form-label">Пароль</label>
-                    <input type="password" id="register-password" class="app-form-input" placeholder="••••••••" required>
-                    <small style="color: var(--color-text-secondary); font-size: 0.85rem;">Минимум 6 символов</small>
+                    <input type="password" id="register-password" class="app-form-input" placeholder="••••••••">
                 </div>
 
                 <div class="app-form-group">
                     <label for="register-password-confirm" class="app-form-label">Подтверждение пароля</label>
-                    <input type="password" id="register-password-confirm" class="app-form-input" placeholder="••••••••" required>
+                    <input type="password" id="register-password-confirm" class="app-form-input" placeholder="••••••••">
                 </div>
 
                 <div id="registerError" class="app-error-message" style="display: none; color: #ff6b6b; margin-bottom: var(--spacing-md);"></div>
 
-                <button type="submit" class="app-button app-button--accent">Зарегистрироваться</button>
+                <button type="button" id="registerBtn" class="app-button app-button--accent">Зарегистрироваться</button>
             </form>
 
             <footer class="app-login-footer">
@@ -49,18 +49,56 @@
         </div>
     </main>
 
-    <script type="module">
-        // Используем относительные пути для GitHub Pages
-        const basePath = window.location.hostname.includes('github.io') ? '/medication-diary' : '';
-        
-        import(basePath + '/js/medications.js').then(module => {
-            module.initDiary();
-        }).catch(error => {
-            console.error('Error loading module:', error);
-            // Fallback для локальной разработки
-            import('./js/medications.js').then(module => {
-                module.initDiary();
-            });
+    <script>
+        document.getElementById('registerBtn').addEventListener('click', function() {
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = document.getElementById('register-password-confirm').value;
+            const errorElement = document.getElementById('registerError');
+            
+            // Валидация
+            if (!name || !email || !password || !confirmPassword) {
+                errorElement.textContent = 'Пожалуйста, заполните все поля';
+                errorElement.style.display = 'block';
+                return;
+            }
+            
+            if (!email.includes('@')) {
+                errorElement.textContent = 'Пожалуйста, введите корректный email';
+                errorElement.style.display = 'block';
+                return;
+            }
+            
+            if (password.length < 6) {
+                errorElement.textContent = 'Пароль должен содержать минимум 6 символов';
+                errorElement.style.display = 'block';
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                errorElement.textContent = 'Пароли не совпадают';
+                errorElement.style.display = 'block';
+                return;
+            }
+            
+            // Имитация успешной регистрации
+            errorElement.style.display = 'none';
+            this.textContent = 'Регистрация...';
+            this.disabled = true;
+            
+            setTimeout(() => {
+                // Сохраняем фейкового пользователя
+                const user = {
+                    id: Date.now().toString(),
+                    name: name,
+                    email: email
+                };
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                
+                // Переходим в дневник
+                window.location.href = 'diary.html';
+            }, 1000);
         });
     </script>
 </body>
