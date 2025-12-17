@@ -2,12 +2,24 @@ const STORAGE_KEYS = {
     USERS: 'med_diary_users',
     CURRENT_USER: 'med_diary_current_user',
     MEDICATIONS: 'med_diary_medications',
-    TAKEN_HISTORY: 'med_diary_taken_history'
+    TAKEN_HISTORY: 'med_diary_taken_history',
+    NOTIFICATION_PERMISSION: 'med_diary_notification_permission',
+    CALENDAR_OAUTH: 'med_diary_calendar_oauth'
 };
+
+// Добавляем префикс для GitHub Pages чтобы избежать конфликтов
+function getStorageKey(key) {
+    const isGitHubPages = window.location.hostname.includes('github.io');
+    if (isGitHubPages) {
+        return `gh_${key}`;
+    }
+    return key;
+}
 
 export function saveToStorage(key, data) {
     try {
-        localStorage.setItem(key, JSON.stringify(data));
+        const storageKey = getStorageKey(key);
+        localStorage.setItem(storageKey, JSON.stringify(data));
     } catch (error) {
         console.error('Ошибка при сохранении в localStorage:', error);
     }
@@ -15,7 +27,8 @@ export function saveToStorage(key, data) {
 
 export function loadFromStorage(key, defaultValue = null) {
     try {
-        const data = localStorage.getItem(key);
+        const storageKey = getStorageKey(key);
+        const data = localStorage.getItem(storageKey);
         return data ? JSON.parse(data) : defaultValue;
     } catch (error) {
         console.error('Ошибка при загрузке из localStorage:', error);
@@ -32,7 +45,7 @@ export function setCurrentUser(user) {
 }
 
 export function logout() {
-    localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+    localStorage.removeItem(getStorageKey(STORAGE_KEYS.CURRENT_USER));
 }
 
 export function getUsers() {

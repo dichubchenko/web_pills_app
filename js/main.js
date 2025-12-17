@@ -1,35 +1,68 @@
 import { getCurrentUser } from './storage.js';
 import { createNotificationStyles } from './utils.js';
-import { notificationManager } from './notifications.js';
+
+let isInitialized = false;
 
 export function initApp() {
+    if (isInitialized) {
+        console.log('App already initialized, skipping...');
+        return;
+    }
+    
+    isInitialized = true;
+    console.log('Initializing app...');
+    
     createNotificationStyles();
     
     const currentUser = getCurrentUser();
     const currentPage = window.location.pathname;
     
-    const publicPages = ['/login.html', '/register.html', '/index.html', '/'];
+    console.log('Current page:', currentPage);
+    console.log('Current user:', currentUser ? 'Logged in' : 'Not logged in');
     
-    if (!currentUser && !publicPages.some(page => currentPage.endsWith(page))) {
-        window.location.href = 'login.html';
+    const publicPages = ['/login.html', '/register.html', '/index.html', '/', '/medication-diary/login.html', '/medication-diary/register.html', '/medication-diary/index.html', '/medication-diary/'];
+    
+    const isPublicPage = publicPages.some(page => {
+        const normalizedPage = page.replace(/^\/+/, '');
+        const normalizedCurrent = currentPage.replace(/^\/+/, '');
+        return normalizedCurrent.endsWith(normalizedPage) || normalizedCurrent === normalizedPage;
+    });
+    
+    console.log('Is public page:', isPublicPage);
+    
+    if (!currentUser && !isPublicPage) {
+        console.log('Not logged in and not public page, redirecting to login...');
+        // Используем setTimeout чтобы избежать мгновенного редиректа
+        setTimeout(() => {
+            window.location.href = getPagePath('login.html');
+        }, 100);
         return;
     }
     
     if (currentUser && (currentPage.endsWith('login.html') || currentPage.endsWith('register.html'))) {
-        window.location.href = 'diary.html';
+        console.log('Already logged in, redirecting to diary...');
+        setTimeout(() => {
+            window.location.href = getPagePath('diary.html');
+        }, 100);
         return;
     }
     
     initCommonComponents();
-    
-    if (currentUser && notificationManager.canRequestPermission()) {
-        setTimeout(() => {
-            showNotificationPermissionRequest();
-        }, 2000);
+}
+
+function getPagePath(pageName) {
+    const isGitHubPages = window.location.hostname.includes('github.io');
+    if (isGitHubPages) {
+        // GitHub Pages
+        const repoName = window.location.pathname.split('/')[1] || 'medication-diary';
+        return `/${repoName}/${pageName}`;
     }
+    return pageName;
 }
 
 function initCommonComponents() {
+    console.log('Initializing common components...');
+    
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
             const form = e.target.closest('form');
@@ -66,35 +99,6 @@ function initCommonComponents() {
     }
 }
 
-async function showNotificationPermissionRequest() {
-    const { createModal } = await import('./ui.js');
-    
-    createModal({
-        title: 'Уведомления о приеме лекарств',
-        content: `
-            <div style="line-height: 1.6;">
-                <p>Хотите получать уведомления о времени приема лекарств?</p>
-                <p style="font-size: 0.9rem; color: var(--color-text-secondary);">
-                    Уведомления будут показываться даже когда браузер свернут.
-                </p>
-            </div>
-        `,
-        confirmText: 'Разрешить',
-        cancelText: 'Не сейчас',
-        onConfirm: async () => {
-            const permission = await notificationManager.requestPermission();
-            
-            if (permission === 'granted') {
-                const { showNotification } = await import('./utils.js');
-                showNotification('Уведомления разрешены! Вы будете получать напоминания о приеме лекарств.', 'success');
-            }
-        },
-        onCancel: () => {
-            notificationManager.savePermission('denied');
-        }
-    });
-}
-
 export function setLoading(element, isLoading) {
     if (isLoading) {
         element.classList.add('app-loading');
@@ -106,7 +110,7 @@ export function setLoading(element, isLoading) {
 }
 
 export function redirectTo(page, params = {}) {
-    const url = new URL(page, window.location.origin);
+    const url = new URL(getPagePath(page), window.location.origin);
     
     Object.keys(params).forEach(key => {
         url.searchParams.set(key, params[key]);
