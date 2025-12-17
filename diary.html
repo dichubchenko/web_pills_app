@@ -5,38 +5,131 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Медицинский дневник | Мой день</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <style>
-        /* Только базовые стили */
-        .app-medication-item {
+        .app-medication-badge {
+            font-size: 0.7rem !important;
+            background: rgba(52, 199, 166, 0.2) !important;
+            color: var(--color-accent) !important;
+            padding: 2px 6px !important;
+            border-radius: 10px !important;
+            margin-left: 0.5rem !important;
+            display: inline-block !important;
+        }
+
+        .app-medication-actions {
+            display: flex;
+            gap: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .app-medication-item:hover .app-medication-actions {
+            opacity: 1;
+        }
+
+        .app-delete-btn, .app-notify-btn, .app-calendar-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0.25rem;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .app-delete-btn {
+            color: #ff6b6b;
+        }
+
+        .app-delete-btn:hover {
+            background: rgba(255, 107, 107, 0.1);
+            transform: scale(1.1);
+        }
+
+        .app-notify-btn {
+            color: var(--color-accent);
+        }
+
+        .app-notify-btn:hover {
+            background: rgba(52, 199, 166, 0.1);
+            transform: scale(1.1);
+        }
+
+        .app-calendar-btn {
+            color: #1a73e8;
+        }
+
+        .app-calendar-btn:hover {
+            background: rgba(26, 115, 232, 0.1);
+            transform: scale(1.1);
+        }
+
+        .app-delete-btn:focus, .app-notify-btn:focus, .app-calendar-btn:focus {
+            outline: 2px solid currentColor;
+            outline-offset: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .app-medication-actions {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .app-context-menu {
+            position: fixed;
+            background: var(--color-surface);
+            backdrop-filter: var(--glass-blur);
+            border: var(--glass-border);
+            border-radius: var(--border-radius-small);
+            box-shadow: var(--shadow-strong);
+            min-width: 200px;
+            z-index: 1000;
+            animation: fadeIn 0.2s ease;
+            overflow: hidden;
+        }
+
+        .app-context-menu-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
             display: flex;
             align-items: center;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 8px;
-            margin-bottom: 0.5rem;
-            border-left: 4px solid #1a6b8a;
+            gap: 0.5rem;
+            transition: background 0.2s ease;
         }
-        
-        .app-medication-checkbox {
-            margin-right: 1rem;
-            width: 20px;
-            height: 20px;
+
+        .app-context-menu-item:hover {
+            background: var(--color-surface-hover);
         }
-        
-        .app-medication-info {
-            flex: 1;
+
+        .app-context-menu-item[data-action="delete"] {
+            color: #ff6b6b;
         }
-        
-        .app-medication-name {
-            font-weight: 500;
-            margin-bottom: 4px;
+
+        .app-context-menu-item[data-action="info"] {
+            border-top: 1px solid var(--color-border);
         }
-        
-        .app-medication-time {
-            font-size: 0.85rem;
-            color: #b3e0f2;
+
+        .app-context-menu-item[data-action="notify"] {
+            color: var(--color-accent);
+            border-top: 1px solid var(--color-border);
+        }
+
+        .app-context-menu-item[data-action="calendar"] {
+            color: #1a73e8;
+            border-top: 1px solid var(--color-border);
         }
     </style>
 </head>
@@ -44,104 +137,70 @@
     <main class="app-container">
         <header class="app-diary-header">
             <h1 class="app-page-title">Мой дневник</h1>
-            <div class="app-date-current" id="currentDate">Среда, 17 Апреля</div>
+            <div class="app-date-current" id="currentDate">Загрузка...</div>
         </header>
 
-        <!-- Секция "К приёму" -->
+        <section class="app-date-slider-container app-glass-card">
+            <div class="app-date-slider">
+                <button class="app-date-slider-btn" id="prevDateBtn" aria-label="Предыдущая дата">‹</button>
+
+                <div class="app-date-list" id="dateList">
+                </div>
+
+                <button class="app-date-slider-btn" id="nextDateBtn" aria-label="Следующая дата">›</button>
+            </div>
+        </section>
+
         <section class="app-medication-section">
-            <h2 class="app-section-title">К приёму (<span id="pendingCount">2</span>)</h2>
+            <h2 class="app-section-title">К приёму (<span id="pendingCount">0</span>)</h2>
             <div class="app-medication-list" id="pendingMedications">
-                <div class="app-medication-item">
-                    <input type="checkbox" class="app-medication-checkbox">
-                    <div class="app-medication-info">
-                        <div class="app-medication-name">💊 Аспирин</div>
-                        <div class="app-medication-time">09:00 | 1 таблетка после еды</div>
-                    </div>
-                </div>
-                <div class="app-medication-item">
-                    <input type="checkbox" class="app-medication-checkbox">
-                    <div class="app-medication-info">
-                        <div class="app-medication-name">💊 Витамин D</div>
-                        <div class="app-medication-time">12:00 | 1 капсула</div>
-                    </div>
+                <div class="app-empty-state" style="text-align: center; padding: var(--spacing-lg); color: var(--color-text-secondary);">
+                    На сегодня приёма лекарств нет
                 </div>
             </div>
         </section>
 
-        <!-- Секция "Принято" -->
         <section class="app-medication-section">
-            <h2 class="app-section-title">Принято (<span id="takenCount">1</span>)</h2>
+            <h2 class="app-section-title">Принято (<span id="takenCount">0</span>)</h2>
             <div class="app-medication-list" id="takenMedications">
-                <div class="app-medication-item" style="opacity: 0.7; border-left-color: #34c7a6;">
-                    <input type="checkbox" class="app-medication-checkbox" checked>
-                    <div class="app-medication-info">
-                        <div class="app-medication-name" style="text-decoration: line-through;">💊 Омега-3</div>
-                        <div class="app-medication-time" style="text-decoration: line-through;">08:00 | 1 капсула</div>
-                    </div>
+                <div class="app-empty-state" style="text-align: center; padding: var(--spacing-lg); color: var(--color-text-secondary);">
+                    Вы ещё не приняли ни одного лекарства сегодня
                 </div>
             </div>
         </section>
 
-        <div style="text-align: center; margin-top: 2rem;">
-            <a href="add-medication.html" class="app-button app-button--accent">➕ Добавить лекарство</a>
-            <div style="margin-top: 1rem;">
-                <a href="index.html" class="app-button" style="background: transparent; border: 1px solid rgba(255, 255, 255, 0.1);">← На главную</a>
+        <div class="app-add-button-container">
+            <button class="app-button app-button--circle app-add-button" id="addButton" aria-label="Добавить лекарство" aria-expanded="false">
+                +
+            </button>
+            <div class="app-dropdown-menu" id="dropdownMenu">
+                <a href="add-medication.html?type=single" class="app-dropdown-item">➕ Добавить разовый приём</a>
+                <a href="add-medication.html?type=regular" class="app-dropdown-item">📅 Добавить постоянное лекарство</a>
+                <a href="#" id="manageMedicationsBtn" class="app-dropdown-item">📋 Управление лекарствами</a>
+                <a href="#" id="notificationSettingsBtn" class="app-dropdown-item">🔔 Настройки уведомлений</a>
+                <a href="#" id="calendarSettingsBtn" class="app-dropdown-item">📅 Интеграция с календарем</a>
+                <div class="app-dropdown-divider" style="height: 1px; background: var(--color-border); margin: 0.5rem 0;"></div>
+                <a href="#" id="logoutBtn" class="app-dropdown-item">🚪 Выйти</a>
             </div>
         </div>
+
+        <footer style="text-align: center; margin-top: var(--spacing-xl); font-size: 0.9rem; opacity: 0.7;">
+            <p><a href="index.html">← На главную</a></p>
+        </footer>
     </main>
 
-    <script>
-        // Простая версия дневника
-        console.log('Diary page loaded - SIMPLE VERSION');
+    <script type="module">
+        // Используем относительные пути для GitHub Pages
+        const basePath = window.location.hostname.includes('github.io') ? '/medication-diary' : '';
         
-        // Проверяем авторизацию
-        const currentUser = localStorage.getItem('currentUser');
-        if (!currentUser) {
-            // Если нет пользователя, переходим на логин
-            setTimeout(() => {
-                window.location.href = 'login.html';
-            }, 100);
-        } else {
-            // Показываем имя пользователя
-            try {
-                const user = JSON.parse(currentUser);
-                const pageTitle = document.querySelector('.app-page-title');
-                if (pageTitle) {
-                    pageTitle.textContent = `Дневник ${user.name}`;
-                }
-            } catch (e) {
-                console.log('Error parsing user:', e);
-            }
-        }
-        
-        // Обработка чекбоксов
-        document.querySelectorAll('.app-medication-checkbox').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const item = this.closest('.app-medication-item');
-                if (this.checked) {
-                    item.style.opacity = '0.7';
-                    item.style.borderLeftColor = '#34c7a6';
-                    item.querySelector('.app-medication-name').style.textDecoration = 'line-through';
-                    item.querySelector('.app-medication-time').style.textDecoration = 'line-through';
-                    
-                    // Обновляем счетчики
-                    const pendingCount = document.getElementById('pendingCount');
-                    const takenCount = document.getElementById('takenCount');
-                    if (pendingCount && takenCount) {
-                        pendingCount.textContent = parseInt(pendingCount.textContent) - 1;
-                        takenCount.textContent = parseInt(takenCount.textContent) + 1;
-                    }
-                }
+        import(basePath + '/js/medications.js').then(module => {
+            module.initDiary();
+        }).catch(error => {
+            console.error('Error loading module:', error);
+            // Fallback для локальной разработки
+            import('./js/medications.js').then(module => {
+                module.initDiary();
             });
-        });
-        
-        // Кнопка выхода
-        document.body.addEventListener('click', function(e) {
-            if (e.target.id === 'logoutBtn') {
-                e.preventDefault();
-                localStorage.removeItem('currentUser');
-                window.location.href = 'index.html';
-            }
         });
     </script>
 </body>
