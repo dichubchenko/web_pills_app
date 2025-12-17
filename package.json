@@ -6,11 +6,16 @@
   "scripts": {
     "start": "npx serve .",
     "dev": "npx live-server --port=8080",
+    "build": "echo 'No build step required'",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d .",
     "hard-reset": "npm cache clean --force && rm -rf node_modules package-lock.json && npm install",
     "hard-dev": "npm run hard-reset && npm run dev"
   },
   "keywords": ["medication", "diary", "health", "tracker"],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "gh-pages": "^6.1.1"
+  }
 }
-
