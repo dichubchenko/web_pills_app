@@ -8,11 +8,6 @@ export class MedicationNotifications {
         this.isSupported = 'Notification' in window;
         this.permission = this.getSavedPermission();
         this.initPermissionListener();
-        console.log('Notification Manager initialized:', {
-            supported: this.isSupported,
-            permission: this.permission,
-            browserPermission: Notification.permission
-        });
     }
 
     initPermissionListener() {
@@ -21,14 +16,13 @@ export class MedicationNotifications {
         try {
             if ('permissions' in navigator && 'query' in navigator.permissions) {
                 navigator.permissions.query({ name: 'notifications' }).then((permissionStatus) => {
-                    console.log('Permission status listener initialized');
                     permissionStatus.onchange = () => {
-                        console.log('Permission changed:', Notification.permission);
-                        this.permission = Notification.permission;
-                        this.savePermission(this.permission);
+                        const newPermission = Notification.permission;
+                        this.permission = newPermission;
+                        this.savePermission(newPermission);
                     };
-                }).catch((error) => {
-                    console.warn('Не удалось установить слушатель разрешений:', error);
+                }).catch(() => {
+                    console.warn('Не удалось установить слушатель разрешений');
                 });
             }
         } catch (error) {
@@ -42,9 +36,7 @@ export class MedicationNotifications {
         const saved = localStorage.getItem(NOTIFICATION_PERMISSION_KEY);
         const browserPermission = Notification.permission;
         
-        console.log('Saved permission:', saved, 'Browser permission:', browserPermission);
-        
-        if (!saved) {
+        if (!saved || saved === 'default') {
             return browserPermission;
         }
         
@@ -52,7 +44,6 @@ export class MedicationNotifications {
     }
 
     savePermission(permission) {
-        console.log('Saving permission:', permission);
         this.permission = permission;
         localStorage.setItem(NOTIFICATION_PERMISSION_KEY, permission);
         
@@ -68,9 +59,7 @@ export class MedicationNotifications {
         }
 
         try {
-            console.log('Requesting notification permission...');
             const permission = await Notification.requestPermission();
-            console.log('Permission result:', permission);
             this.savePermission(permission);
             return permission;
         } catch (error) {
@@ -84,52 +73,35 @@ export class MedicationNotifications {
         if (!this.isSupported) return;
         
         const browserPermission = Notification.permission;
-        console.log('Updating permission from browser:', browserPermission, 'Current:', this.permission);
-        
         if (browserPermission !== this.permission) {
-            console.log('Permission changed, updating...');
             this.permission = browserPermission;
             this.savePermission(browserPermission);
         }
     }
 
     showTestNotification() {
-        console.log('Showing test notification...');
         this.updatePermissionFromBrowser();
         
-        if (!this.isSupported) {
-            console.error('Notifications not supported');
+        if (!this.isSupported || this.permission !== 'granted') {
             return false;
         }
-        
-        if (this.permission !== 'granted') {
-            console.error('Permission not granted:', this.permission);
-            return false;
-        }
+
+        const options = {
+            body: 'Это тестовое уведомление. Уведомления работают корректно!',
+            icon: MEDICATION_ICON_SVG,
+            badge: MEDICATION_ICON_SVG,
+            tag: 'test-notification',
+            requireInteraction: true
+        };
 
         try {
-            const options = {
-                body: 'Это тестовое уведомление. Уведомления работают корректно!',
-                icon: MEDICATION_ICON_SVG,
-                badge: MEDICATION_ICON_SVG,
-                tag: 'test-notification-' + Date.now(),
-                requireInteraction: false
-            };
-
-            console.log('Creating notification with options:', options);
             const notification = new Notification('Медицинский дневник', options);
             
             notification.onclick = () => {
-                console.log('Test notification clicked');
                 window.focus();
                 notification.close();
             };
-            
-            notification.onerror = (error) => {
-                console.error('Notification error:', error);
-            };
-            
-            console.log('Test notification created successfully');
+
             return true;
         } catch (error) {
             console.error('Ошибка при показе тестового уведомления:', error);
@@ -138,18 +110,15 @@ export class MedicationNotifications {
     }
 
     scheduleMedicationNotification(medication, date = new Date()) {
-        console.log('Scheduling notification for:', medication.name, 'at', medication.time);
         this.updatePermissionFromBrowser();
         
         if (!this.isSupported || this.permission !== 'granted') {
-            console.log('Cannot schedule: supported=', this.isSupported, 'permission=', this.permission);
             return null;
         }
 
         const notificationId = `medication-${medication.id}-${date.toDateString()}`;
         
         if (this.notifications.has(notificationId)) {
-            console.log('Cancelling existing notification:', notificationId);
             this.cancelNotification(notificationId);
         }
 
@@ -166,14 +135,10 @@ export class MedicationNotifications {
         }
 
         if (timeUntilNotification > 24 * 60 * 60 * 1000) {
-            console.log('Notification time is more than 24 hours in the future');
             return null;
         }
 
-        console.log('Notification scheduled for:', notificationTime, 'in', timeUntilNotification, 'ms');
-
         const timeoutId = setTimeout(() => {
-            console.log('Timeout fired for:', medication.name);
             this.showMedicationNotification(medication);
         }, timeUntilNotification);
 
@@ -183,39 +148,34 @@ export class MedicationNotifications {
             scheduledTime: notificationTime
         });
 
-        console.log('Notifications scheduled:', this.notifications.size);
         return notificationId;
     }
 
     showMedicationNotification(medication) {
-        console.log('Showing medication notification for:', medication.name);
         this.updatePermissionFromBrowser();
         
         if (!this.isSupported || this.permission !== 'granted') {
-            console.log('Cannot show: supported=', this.isSupported, 'permission=', this.permission);
             return null;
         }
 
         const notificationId = `medication-${medication.id}-${Date.now()}`;
         
-        try {
-            const options = {
-                body: `Время принять ${medication.name} (${medication.dosage})`,
-                icon: MEDICATION_ICON_SVG,
-                badge: MEDICATION_ICON_SVG,
-                tag: notificationId,
-                requireInteraction: false,
-                data: {
-                    medicationId: medication.id,
-                    medicationName: medication.name
-                }
-            };
+        const options = {
+            body: `Время принять ${medication.name} (${medication.dosage})`,
+            icon: MEDICATION_ICON_SVG,
+            badge: MEDICATION_ICON_SVG,
+            tag: notificationId,
+            requireInteraction: true,
+            data: {
+                medicationId: medication.id,
+                medicationName: medication.name
+            }
+        };
 
-            console.log('Creating medication notification with options:', options);
+        try {
             const notification = new Notification('💊 Пора принять лекарство', options);
 
             notification.onclick = (event) => {
-                console.log('Medication notification clicked');
                 event.preventDefault();
                 window.focus();
                 
@@ -227,30 +187,22 @@ export class MedicationNotifications {
                 
                 notification.close();
             };
-            
-            notification.onerror = (error) => {
-                console.error('Medication notification error:', error);
-            };
 
             notification.onclose = () => {
-                console.log('Notification closed:', notificationId);
                 this.notifications.delete(notificationId);
             };
 
-            console.log('Medication notification created successfully');
             return notificationId;
         } catch (error) {
-            console.error('Error showing medication notification:', error);
+            console.error('Ошибка при показе уведомления:', error);
             return null;
         }
     }
 
     scheduleAllMedicationsForToday(medications) {
-        console.log('Scheduling all medications for today:', medications.length);
         this.updatePermissionFromBrowser();
         
         if (!this.isSupported || this.permission !== 'granted') {
-            console.log('Cannot schedule all: supported=', this.isSupported, 'permission=', this.permission);
             return;
         }
 
@@ -262,7 +214,6 @@ export class MedicationNotifications {
 
     cancelNotification(notificationId) {
         if (this.notifications.has(notificationId)) {
-            console.log('Cancelling notification:', notificationId);
             const { timeoutId } = this.notifications.get(notificationId);
             clearTimeout(timeoutId);
             this.notifications.delete(notificationId);
@@ -270,10 +221,8 @@ export class MedicationNotifications {
     }
 
     cancelAllNotifications() {
-        console.log('Cancelling all notifications:', this.notifications.size);
-        this.notifications.forEach(({ timeoutId }, id) => {
+        this.notifications.forEach(({ timeoutId }) => {
             clearTimeout(timeoutId);
-            console.log('Cancelled:', id);
         });
         this.notifications.clear();
     }
@@ -281,21 +230,16 @@ export class MedicationNotifications {
     getScheduledNotifications() {
         this.updatePermissionFromBrowser();
         
-        const scheduled = Array.from(this.notifications.entries()).map(([id, data]) => ({
+        return Array.from(this.notifications.entries()).map(([id, data]) => ({
             id,
             medication: data.medication,
             scheduledTime: data.scheduledTime
         }));
-        
-        console.log('Scheduled notifications:', scheduled.length);
-        return scheduled;
     }
 
     isPermissionGranted() {
         this.updatePermissionFromBrowser();
-        const granted = this.isSupported && this.permission === 'granted';
-        console.log('isPermissionGranted:', granted, 'supported=', this.isSupported, 'permission=', this.permission);
-        return granted;
+        return this.isSupported && this.permission === 'granted';
     }
 
     isPermissionDenied() {
@@ -306,16 +250,6 @@ export class MedicationNotifications {
     canRequestPermission() {
         this.updatePermissionFromBrowser();
         return this.isSupported && this.permission === 'default';
-    }
-
-    checkNotificationSupport() {
-        return {
-            supported: this.isSupported,
-            permission: this.permission,
-            browserPermission: Notification.permission,
-            maxActions: 'actions' in Notification.prototype ? Notification.maxActions : 0,
-            requiresInteraction: 'requireInteraction' in Notification.prototype
-        };
     }
 }
 
