@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Медицинский дневник | Мой день</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <style>
         .app-medication-badge {
@@ -29,7 +28,7 @@
             opacity: 1;
         }
 
-        .app-delete-btn, .app-notify-btn, .app-calendar-btn {
+        .app-delete-btn, .app-notify-btn {
             background: none;
             border: none;
             cursor: pointer;
@@ -57,16 +56,7 @@
             transform: scale(1.1);
         }
 
-        .app-calendar-btn {
-            color: #1a73e8;
-        }
-
-        .app-calendar-btn:hover {
-            background: rgba(26, 115, 232, 0.1);
-            transform: scale(1.1);
-        }
-
-        .app-delete-btn:focus, .app-notify-btn:focus, .app-calendar-btn:focus {
+        .app-delete-btn:focus, .app-notify-btn:focus {
             outline: 2px solid currentColor;
             outline-offset: 2px;
         }
@@ -95,7 +85,7 @@
             border: var(--glass-border);
             border-radius: var(--border-radius-small);
             box-shadow: var(--shadow-strong);
-            min-width: 200px;
+            min-width: 180px;
             z-index: 1000;
             animation: fadeIn 0.2s ease;
             overflow: hidden;
@@ -124,11 +114,6 @@
 
         .app-context-menu-item[data-action="notify"] {
             color: var(--color-accent);
-            border-top: 1px solid var(--color-border);
-        }
-
-        .app-context-menu-item[data-action="calendar"] {
-            color: #1a73e8;
             border-top: 1px solid var(--color-border);
         }
     </style>
@@ -178,7 +163,6 @@
                 <a href="add-medication.html?type=regular" class="app-dropdown-item">📅 Добавить постоянное лекарство</a>
                 <a href="#" id="manageMedicationsBtn" class="app-dropdown-item">📋 Управление лекарствами</a>
                 <a href="#" id="notificationSettingsBtn" class="app-dropdown-item">🔔 Настройки уведомлений</a>
-                <a href="#" id="calendarSettingsBtn" class="app-dropdown-item">📅 Интеграция с календарем</a>
                 <div class="app-dropdown-divider" style="height: 1px; background: var(--color-border); margin: 0.5rem 0;"></div>
                 <a href="#" id="logoutBtn" class="app-dropdown-item">🚪 Выйти</a>
             </div>
