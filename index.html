@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Медицинский дневник | Главная</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 </head>
 <body>
     <div class="app-container">
@@ -21,17 +20,16 @@
     </div>
     
     <script type="module">
-        // Автоматическое определение пути
-        const basePath = window.location.pathname.includes('/medication-diary/') ? '/medication-diary' : '';
+        // Используем относительные пути для GitHub Pages
+        const basePath = window.location.hostname.includes('github.io') ? '/medication-diary' : '';
         
-        // Загружаем main.js с правильным путем
-        import(`${basePath ? basePath + '/' : ''}js/main.js`).then(module => {
-            module.initApp();
+        import(basePath + '/js/medications.js').then(module => {
+            module.initDiary();
         }).catch(error => {
-            console.error('Error loading main.js:', error);
+            console.error('Error loading module:', error);
             // Fallback для локальной разработки
-            import('./js/main.js').then(module => {
-                module.initApp();
+            import('./js/medications.js').then(module => {
+                module.initDiary();
             });
         });
     </script>
