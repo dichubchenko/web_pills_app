@@ -38,8 +38,18 @@
     </main>
 
     <script type="module">
-        import { initLogin } from './js/auth.js';
-        initLogin();
+        // Используем относительные пути для GitHub Pages
+        const basePath = window.location.hostname.includes('github.io') ? '/medication-diary' : '';
+        
+        import(basePath + '/js/medications.js').then(module => {
+            module.initDiary();
+        }).catch(error => {
+            console.error('Error loading module:', error);
+            // Fallback для локальной разработки
+            import('./js/medications.js').then(module => {
+                module.initDiary();
+            });
+        });
     </script>
 </body>
 </html>
